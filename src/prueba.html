@@ -88,6 +88,8 @@
         utterance.pitch = 1.2; // Aumentar un poco el tono de voz
         //utterance.lang = 'es-ES';
         utterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'es-ES');
+        // Establecer el índice del texto donde se detuvo la reproducción anterior (si existe)
+        utterance.charIndex = stoppedPage === currentPage ? stoppedTextIndex : 0;
         speechSynthesis.speak(utterance);
         // Evento 'onend' para pasar a la siguiente página al finalizar la lectura
         utterance.onend = function() {
@@ -99,6 +101,8 @@
     function stopSpeech() {
       if (utterance) {
         speechSynthesis.cancel();
+        stoppedPage = currentPage; // Guardar la página actual donde se detuvo la reproducción
+        stoppedTextIndex = utterance.charIndex || 0; // Guardar el índice del texto donde se detuvo la reproducción
       }
     }
 
