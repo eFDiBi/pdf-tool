@@ -85,7 +85,7 @@
         utterance.rate = 0.85;
         utterance.pitch = 1.2; // Aumentar un poco el tono de voz
         //utterance.lang = 'es-ES';
-        utterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'es-ES');
+        utterance.voice = speechSynthesis.getVoices().find(voice => voice.name === 'Mónica');
         speechSynthesis.speak(utterance);
         // Evento 'onend' para pasar a la siguiente página al finalizar la lectura
         utterance.onend = function() {
