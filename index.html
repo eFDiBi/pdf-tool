@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Visor de PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+</head>
+
+<body>
+  <input type="file" id="pdf-file-input">
+  <div>
+    <button id="stopButton" onclick="pauseSpeech()">Detener</button>
+    <button id="stopButton" onclick="startSpeech()">Reproducir</button>
+  </div>
+  <div>
+    <button id="prev-page-btn" onclick="goToPreviousPage()">Atrás</button>
+    <button id="next-page-btn" onclick="goToNextPage()">Adelante</button>
+  </div>
+  <div id="pdf-viewer-container">
+    <canvas id="pdf-viewer"></canvas>
+  </div>
+  <div>
+    <button id="prev-page-btn" onclick="goToPreviousPage()">Atrás</button>
+    <button id="next-page-btn" onclick="goToNextPage()">Adelante</button>
+  </div>
+
+  <script>
+    let utterance = null;
+    document.getElementById('pdf-file-input').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+          const typedArray = new Uint8Array(this.result);
+          loadPDF(typedArray);
+        };
+        fileReader.readAsArrayBuffer(file);
+      }
+    });
+    let pdfInstance = null;
+    let totalPages = 0;
+    let currentPage = 1;
+    const pagesContainer = document.getElementById('pdf-viewer-container');
+
+    function loadPDF(data) {
+      pdfjsLib.getDocument(data).promise.then(function(pdf) {
+        pdfInstance = pdf;
+        totalPages = pdf.numPages;
+        showPage(currentPage);
+      });
+    }
+
+    function showPage(pageNumber) {
+      pdfInstance.getPage(pageNumber).then(function(page) {
+        const viewport = page.getViewport({
+          scale: 1.5
+        });
+        const canvas = document.getElementById('pdf-viewer');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        page.render({
+          canvasContext: context,
+          viewport: viewport
+        });
+        readPage(page);
+      });
+    }
+
+    function readPage(page) {
+      page.getTextContent().then(function(textContent) {
+        const textItems = textContent.items;
+        let pageText = '';
+        for (let i = 0; i < textItems.length; i++) {
+          if (i == 0) continue;
+          const textItem = textItems[i];
+          pageText += textItem.str + ' ';
+        }
+        // Detener la reproducción anterior (si existe)
+        stopSpeech();
+        // Reproducir el texto utilizando la API de Speech Synthesis
+        utterance = new SpeechSynthesisUtterance();
+        utterance.text = pageText;
+        utterance.volume = 1;
+        utterance.rate = 0.85;
+        utterance.pitch = 1.2; // Aumentar un poco el tono de voz
+        //utterance.lang = 'es-ES';
+        utterance.voice = speechSynthesis.getVoices().find(voice => voice.lang === 'es-ES');
+        speechSynthesis.speak(utterance);
+        // Evento 'onend' para pasar a la siguiente página al finalizar la lectura
+        utterance.onend = function() {
+          goToNextPage();
+        };
+      });
+    }
+
+    function stopSpeech() {
+      if (utterance) {
+        speechSynthesis.cancel();
+      }
+    }
+    
+    function pauseSpeech() {
+      if (utterance) {
+        speechSynthesis.pause();
+      }
+    }
+
+    function startSpeech() {
+      if (utterance) {
+        speechSynthesis.resume();
+      }
+    }
+
+    function goToPreviousPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        showPage(currentPage);
+      }
+    }
+
+    function goToNextPage() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        showPage(currentPage);
+      }
+    }
+  </script>
+</body>
+
+</html>
