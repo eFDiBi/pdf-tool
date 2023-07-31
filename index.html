@@ -72,9 +72,9 @@
         const textItems = textContent.items;
         let pageText = '';
         for (let i = 0; i < textItems.length; i++) {
-          if (i == 0) continue;
+          if (i < 2 && (i != (textItems.length-1))) continue;
           const textItem = textItems[i];
-          pageText += textItem.str + ' ';
+          pageText += textItem.str + '. ';
         }
         // Detener la reproducción anterior (si existe)
         stopSpeech();
